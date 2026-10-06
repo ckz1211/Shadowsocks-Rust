@@ -138,28 +138,40 @@ check_ver_comparison(){
 
 # 官方源
 stable_download() {
-	echo -e "${Info} 默认开始下载官方源 Shadowsocks Rust ……"
-	wget --no-check-certificate -N "https://github.com/shadowsocks/shadowsocks-rust/releases/download/${new_ver}/shadowsocks-${new_ver}.${arch}-unknown-linux-musl.tar.xz"
-	if [[ ! -e "shadowsocks-${new_ver}.${arch}-unknown-linux-musl.tar.xz" ]]; then
-		echo -e "${Error} Shadowsocks Rust 官方源下载失败！"
-		return 1 && exit 1
-	else
-		tar -xvf "shadowsocks-${new_ver}.${arch}-unknown-linux-musl.tar.xz"
-	fi
-	if [[ ! -e "ssserver" ]]; then
-		echo -e "${Error} Shadowsocks Rust 解压失败！"
-		echo -e "${Error} Shadowsocks Rust 安装失败 !"
-		return 1 && exit 1
-	else
-		rm -rf "shadowsocks-${new_ver}.${arch}-unknown-linux-musl.tar.xz"
+    echo -e "${Info} 默认开始下载官方源 Shadowsocks Rust（musl 静态版）……"
+
+    local ss_target
+    case "${arch}" in
+        arm)
+            ss_target="arm-unknown-linux-musleabihf"
+            ;;
+        *)
+            ss_target="${arch}-unknown-linux-musl"
+            ;;
+    esac
+
+    local pkg="shadowsocks-${new_ver}.${ss_target}.tar.xz"
+    wget --no-check-certificate -N "https://github.com/shadowsocks/shadowsocks-rust/releases/download/${new_ver}/${pkg}"
+    if [[ ! -e "${pkg}" ]]; then
+        echo -e "${Error} Shadowsocks Rust 官方源下载失败！"
+        return 1 && exit 1
+    else
+        tar -xvf "${pkg}"
+    fi
+    if [[ ! -e "ssserver" ]]; then
+        echo -e "${Error} Shadowsocks Rust 解压失败！"
+        echo -e "${Error} Shadowsocks Rust 安装失败 !"
+        return 1 && exit 1
+    else
+        rm -rf "${pkg}"
         chmod +x ssserver
-	    mv -f ssserver "${SS_File}"
-	    rm sslocal ssmanager ssservice ssurl
-	    echo "${new_ver}" > ${SS_Now_ver_File}
+        mv -f ssserver "${SS_File}"
+        rm sslocal ssmanager ssservice ssurl
+        echo "${new_ver}" > ${SS_Now_ver_File}
 
         echo -e "${Info} Shadowsocks Rust 主程序下载安装完毕！"
-		return 0
-	fi
+        return 0
+    fi
 }
 
 # 备用源
